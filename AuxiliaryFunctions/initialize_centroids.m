@@ -34,7 +34,7 @@ if strcmp(init, 'uniform1')
 
 % Random
 elseif strcmp(init, 'random')
-    C_int = randomsample(rows, k);
+    C_int = randsample(rows, k);
     C = X(C_int, :);
 
 % From preliminary PCA
@@ -67,7 +67,7 @@ elseif strcmp(init, 'best_DB')
     C_init = cell(it_init, 1);
     db_init = zeros(it_init, 1);
     for i = 1 : it_init
-        C_int = randomsample(rows, k);
+        C_int = randsample(rows, k);
         C = X(C_int, :);
         C_init{i} = C;
         
