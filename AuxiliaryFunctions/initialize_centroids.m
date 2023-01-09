@@ -125,6 +125,11 @@ elseif strcmp(init, 'uniform3')
     C_int = linspace(1, rows, k+2);
     C = X(round(C_int(2:k+1)), :);
     opt_3 = 'uniform3';
+
+else
+    warning('Not avaliable initialization method was selected, uniform1 will be selected by default');
+    C_int = linspace(1, rows, k+2);
+    C = X(round(C_int(2:k+1)), :);
 end
 
 
