@@ -8,8 +8,10 @@ function [output] = plot_weights(eigenvectors, labels, opt)
 % Number of variables
 [n,~] = size(eigenvectors{1});
 
+no_labels = false;
 if n ~= length(labels)
-    error('Length of labels incoherent with size of eigenvectors, %d vs %d', n, length(labels));
+    warning('Length of labels incoherent with size of eigenvectors, %d vs %d', n, length(labels));
+    no_labels = true;
 end
 
 % Number of clusters
@@ -49,7 +51,9 @@ if isfield(opt, 'PlotAllClusters') == true
 
         ax = gca;
         ax.TickLabelInterpreter = 'latex';
-        ax.XTickLabels = labels;
+        if no_labels == false
+            ax.XTickLabels = labels;
+        end
         ax.TickLabelInterpreter = 'latex';
         ylabel('Weights', 'interpreter', 'latex');
         legend(leg, 'Location','bestoutside', 'interpreter', 'latex');

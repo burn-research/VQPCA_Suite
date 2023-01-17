@@ -8,7 +8,7 @@ function [C] = initialize_centroids(X, k, opt)
 %
 %   'PCA'           perform PCA and sample uniformly within the U_scores
 %
-%   'bestDB'        perform N initial iterations and pick the solution with
+%   'best_DB'        perform N initial iterations and pick the solution with
 %                   best DB
 %
 %   'uniform2':     Initialize idx(i) uniformly
@@ -61,7 +61,7 @@ elseif strcmp(init, 'PCA')
 
 % Initialize with best random of 10 initial iterations
 elseif strcmp(init, 'best_DB')
-    it_init = 10;
+    it_init = 20;
     fprintf('Initializing from the best of initial %d iterations /n', it_init);
     rec_err_init = zeros(it_init, 1);
     C_init = cell(it_init, 1);

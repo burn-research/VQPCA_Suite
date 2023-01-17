@@ -21,10 +21,7 @@ for i = 1 : k
 end
 
 % Sort the mean values in ascending order
-[var_sort, id] = sort(var_mean, 'descend');
-disp(var_mean);
-disp(id);
-pause;
+[~, id] = sort(var_mean, 'descend');
 
 % Create the new idx vector
 idx_new = zeros(rows, 1);
