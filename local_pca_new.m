@@ -119,9 +119,8 @@ function [idx, infos] = ...
 [rows, columns] = size(X);
 
 % Set font size
-set(0,'defaultaxesfontsize',16);
-set(0,'defaulttextfontsize',18);
-set(0, 'defaulttextfontweight', 'Bold');
+set(0,'defaultaxesfontsize',20);
+set(0,'defaulttextfontsize',20);
 
 %% Convergence parameters
 
@@ -175,7 +174,7 @@ if isfield(opt, 'Scaling') == false
     opt_3 = 'auto';
     disp('Data will be scaled using the auto scaling by default');
 else
-    scaling_list = {'auto', 'range', 'pareto', 'vast', 'level', 'max'};
+    scaling_list = {'auto', 'range', 'pareto', 'vast', 'level', 'max', 'no'};
     if ismember(opt.Scaling, scaling_list) == false
         warning('Invalid scaling criterion specified. Data will be scaled with auto scaling');
     else
@@ -191,6 +190,8 @@ else
             pre_scal_crit = 5;
         elseif strcmp(opt.Scaling, 'max')
             pre_scal_crit = 6;
+        elseif strcmp(opt.Scaling, 'no')
+            pre_scal_crit = 0;
         end
     end
 
@@ -316,7 +317,6 @@ elseif init_eigs == 3
         eigvec{j} = ret_eigvec;
     end
 end
-
 
 % CREATE A DIRECTORY FOR THE OUTPUTS
 thetime = clock;

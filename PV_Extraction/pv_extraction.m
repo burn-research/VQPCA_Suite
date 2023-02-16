@@ -120,7 +120,7 @@ ret_data = zeros(rows, columns);
 
 %% METHOD B4 FORWARD
 %
-% In method B1 forward a PCA is performed on the original matrix of k
+% In method B4 forward a PCA is performed on the original matrix of k
 % variables and n observation, i.e. size(X) = (n, k). The eigenvalues of
 % the covariance/correlation matrix are then computed and a criterion is
 % chosen to retain a number of them (e.g. Joliffe criterion lambda* = 0.7 *
@@ -459,7 +459,7 @@ end
 % the set of m selected variables.
 
 if method == 4
-    [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data] = pca_lt(red_data, cent_crit, scal_crit, stop_rule, inputs);
+    [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data] = pca_lt(data, cent_crit, scal_crit, stop_rule, inputs);
     q = n_eig;
     ret_index = nchoosek(1 : columns, q);
     n_comb = size(ret_index, 1);
@@ -609,7 +609,7 @@ end
 
 
 if method == 5
-    [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig] = pca_lt(red_data, cent_crit, scal_crit, stop_rule, inputs);
+    [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig] = pca_lt(data, cent_crit, scal_crit, stop_rule, inputs);
     q = n_eig;
     
     n_clust = input('Specify the number of clusters \n');
