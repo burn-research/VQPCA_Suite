@@ -52,7 +52,11 @@
 %
 %   opt.FStoich = (float) Stoichiometric mixture fraction
 %
-%   OUTPUTS
+%   OUTPUTS: 
+%
+%       idx = vector of clustering labels
+%
+%       infos = struct array with the fields listed below
 %
 % infos.C = C; 
 % infos.eigenvectors = eigvec;  
@@ -398,12 +402,17 @@ while ((convergence == 0) && (iter < iter_max))
 
     end
 
-    % Evaluate the squared mean reconstruction error
-    for j = 1 : k
-        D = diag(gamma{j});
-        C_mat = repmat(C(j, :), rows, 1);
-        rec_err_os = (scal_X - C_mat - (scal_X - C_mat) * D^-1 * eigvec{j} * eigvec{j}' * D);
-        sq_rec_err(:, j) = sum(rec_err_os.^2, 2);     
+    % Evaluate reconstruction error
+    if isfield(opt, 'CustomError')
+        sq_rec_err = custom_rec_err(scal_X, C, gamma, eigvec, opt);
+    else
+        % Evaluate the squared mean reconstruction error
+        for j = 1 : k
+            D = diag(gamma{j});
+            C_mat = repmat(C(j, :), rows, 1);
+            rec_err_os = (scal_X - C_mat - (scal_X - C_mat) * D^-1 * eigvec{j} * eigvec{j}' * D);
+            sq_rec_err(:, j) = sum(rec_err_os.^2, 2);
+        end
     end
     
     % Classical reconstruction error
@@ -472,8 +481,10 @@ while ((convergence == 0) && (iter < iter_max))
         for j = 1 : k
             C_new(j, :) = mean(nz_X_k{j}, 1);
         end
+        
         eps_rec_var = abs((eps_rec_new  - eps_rec) / eps_rec_new);
         fprintf('\nReconstruction error variance equal to %d \n', eps_rec_var);
+
         if ((eps_rec_var < r_tol) && (eps_rec_new > eps_rec_min) ...
                 && (n_eigs < n_eigs_max)) 
             n_eigs = n_eigs + 1;

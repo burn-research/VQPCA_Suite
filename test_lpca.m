@@ -4,37 +4,55 @@ clear all;
 % Addpath
 addpath(genpath('/Users/mattepsavarese/Desktop/Dottorato/Github/LocalPCA_Suite'));
 
-X = randn(10000,5);
-labels = {'x1', 'x2', 'x3', 'x4', 'x5'};
+% Import data from CFD
+data_solution = importdata('/Users/matteosavarese/Desktop/Dottorato/Data_Furnace/Data_CFD/2D/25mm/50CH4_50H2_phi08_kee/data_solution');
+val = data_solution.data;
+X = val(:,4:end);
+labels = data_solution.textdata;
 
 % Perform local_pca
 opt.Scaling = 'range';
-opt.Center = 3;
+opt.Center = 1;
 
-F = linspace(0, 1, length(X))';
-Fs = 0.3;
-
-opt.F = F;
-opt.FStoich = Fs;
 opt.Algorithm = 'VQPCA';
 
-[idx, infos] = local_pca_new(X, 5, 1, 0.9, opt);
+% Use customization error?
+opt.CustomError = false;
 
-% Reconstruct and plot
-rec_data_uncentered = unscale_rec(infos.RecData, infos.NzIdxClust, infos.gamma_pre, infos.X_ave_pre);
+% Use error penalty?
+opt.EuclideanPenalty = true;
+opt.Penalty = true;
+opt.AlphaReg = 0.001;
+opt.PenaltyNormalized = true;
+opt.NormalizationType = 'Max';
 
-% Parity plots
-opt2.Plot = false;
-[output, r2] = parity_plot(X, infos.RecData, infos.X_ave_pre, ...
-    infos.gamma_pre, infos.NzIdxClust, labels, opt2);
+% Select custom power
+opt.CustomPower = true;
+opt.Power = 3;
+opt.Init = 'best_DB';
 
-% Biplot
-output = biplot_lpca(infos.eigenvectors, labels);
+k = 7;
+[idx, infos] = local_pca_new(X, k, 1, 0.99, opt);
 
-% Distributions of principal components
-output = plot_distributions(infos.UScores);
+% Plot
+figure;
+scatter(val(:,3), val(:,2), 10, idx, 'filled');
+cmname = append('parula(', num2str(k), ')');
+colormap(cmname);
+cb = colorbar;
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 14 12];
 
-% Plot weights
-opt3.PlotAllClusters = true;
-opt3.EigsToPlot = 4;
-output = plot_weights(infos.eigenvectors, labels, opt3);
+! rm -r VQPCA_*
+
+% Use k-means for a comparison
+X_center = center(X, 1);
+X_scaled = scale(X_center, X, 2);
+idx_kmeans = kmeans(X_scaled, k, 'start', 'plus', 'MaxIter',1000);
+figure;
+scatter(val(:,3), val(:,2), 10, idx_kmeans, 'filled');
+cmname = append('parula(', num2str(k), ')');
+colormap(cmname);
+cb = colorbar;
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 14 12];
