@@ -168,7 +168,7 @@ else
     pre_cent_crit = opt.Center;
     if isinteger(pre_cent_crit) == false
         warning('Specify 1 for centering, 0 for no centering. Data will be centered');
-        pre_cent_crit = 1;
+        pre_cent_crit = 0;
     end
 end
 
@@ -352,7 +352,7 @@ end
 % i.e. by conditioning the data on the mixture fraction
 
 % Select centering and scaling criteria for PCA
-cent_crit = 1;
+cent_crit = 0;
 scal_crit = 0;
 
 min_var_expl_clust = ones(k,1);
@@ -587,7 +587,6 @@ if VQ == 2
 end
 
 % ORIGINAL DATA AND RECOVERED DATA RECONSTRUCTION
-
 rec_scal_X = zeros(rows, columns);
 rec_scal_X_hat = zeros(rows, columns);
 for j = 1 : k
@@ -608,7 +607,6 @@ end
 overall_cpu_time = cputime - t0;
 
 % WRITE THE OUTPUT FILE
-
 fprintf(fid, '\nTotal number of clusters equal to %d \n', k);
 fprintf(fid, '\nTotal number of iterations equal to %d \n', iter);
 fprintf(fid, '\nRelative recontruction error equal to %d \n', eps_rec_new);
