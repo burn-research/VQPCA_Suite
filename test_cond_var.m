@@ -120,11 +120,13 @@ opt.Center = 1;
 opt.StopRule = 4;
 opt.Inputs = 2;
 
+scal_crit = 1;
+
 labels = {names{1:9}, '$S_{Z1}$', '$S_{Z2}$', '$S_{Z3}$'};
 
 % Perform PCA with auto scaling
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-    pca_lt(X, 1, 4, 4, 3); 
+    pca_lt(X, 1, scal_crit, 4, 3); 
 
 % Project source term
 ss_proj = (sources_data(:,1:9)./gamma) * ret_eigvec;
@@ -152,6 +154,205 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 24 12];
 ylabel('$\chi_x$');
 ylim([0 2.5]);
+
+%% Use VQPCA and test local non-linearities
+opt.Center  = 1;
+opt.Scaling = 'auto';
+opt.Init = 'uniform1';
+k = 3;
+[idx, infos] = local_pca_new(X, 3, 4, 3, opt);
+
+% Project source term
+source_proj_clust = cell(k,1);
+for i = 1 : k
+    source_proj_clust{i} = (sources_data(idx==i,1:9)./infos.gamma_pre) * infos.eigenvectors{i};
+end
+
+% Scatter plot of the three source term
+figure;
+% Cluster 1
+subplot(1,3,1);
+scatter(infos.UScores{1}(:,1), source_proj_clust{1}(:,1), 5, hrr(idx==1), 'filled');
+colormap jet;
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('C1');
+% Cluster 2
+subplot(1,3,2);
+scatter(infos.UScores{2}(:,1), source_proj_clust{2}(:,1), 5, hrr(idx==2), 'filled');
+colormap jet;
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('C2');
+% Cluster 3
+subplot(1,3,3);
+scatter(infos.UScores{3}(:,1), source_proj_clust{3}(:,1), 5, hrr(idx==3), 'filled');
+colormap jet;
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('C3');
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 28 12];
+
+% Calculate non linearities in each cluster
+figure;
+phi_clust = cell(k,1);
+for i = 1 : k
+    phic = zeros(3,1);
+
+    for j = 1 : 3
+        phic(j) = NonLinearVariance(infos.UScores{i}(:,j), source_proj_clust{i}(:,j), 25);
+    end
+
+    phi_clust{i} = phic;
+end
+
+subplot(1,3,1);
+bar([phi_clust{1} chi_auto(10,:)'], 0.8);
+ax = gca; ax.TickLabelInterpreter = 'latex';
+ax.XTickLabel = {'$S_{Z1}$', '$S_{Z2}$', '$S_{Z3}$'};
+ylabel('$\chi(U1)$');
+ylim([0 2.5]);
+title('C1');
+
+subplot(1,3,2);
+bar([phi_clust{2} chi_auto(11,:)'], 0.8);
+ax = gca; ax.TickLabelInterpreter = 'latex';
+ax.XTickLabel = {'$S_{Z1}$', '$S_{Z2}$', '$S_{Z3}$'};
+ylabel('$\chi(U1)$');
+ylim([0 2.5]);
+title('C2');
+
+subplot(1,3,3);
+bar([phi_clust{3} chi_auto(12,:)'], 0.8);
+ax = gca; ax.TickLabelInterpreter = 'latex';
+ax.XTickLabel = {'$S_{Z1}$', '$S_{Z2}$', '$S_{Z3}$'};
+ylabel('$\chi(U1)$');
+legend('Local', 'Global', 'interpreter', 'latex');
+ylim([0 2.5]);
+title('C3');
+
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 24 12];
+
+%% Try to perform a 1-dimensional optimization of the metric
+scal_crit = 1;
+X_center = center(X, 1);
+[X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
+
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X, 1, scal_crit, 4, 1); 
+
+fun = @(a) cost_function(a, X_scaled, sources_data(:,1:9)./gamma, 100);
+x0 = ret_eigvec(:,1);
+nonlincon = @(a) constraint_opt(a);
+options = optimoptions("fmincon",...
+    "Algorithm","interior-point",...
+    "EnableFeasibilityMode",true,...
+    "SubproblemAlgorithm","cg");
+
+A = [];
+b = [];
+Aeq = [];
+beq = [];
+lb = [];
+ub = [];
+[aopt,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub, nonlincon, options);
+
+% Project source term
+sproj_opt = (sources_data(:,1:9)./gamma) * aopt;
+uscores = X_scaled * aopt;
+
+figure; subplot(1,2,1);
+scatter(uscores(:,1), sproj_opt(:,1), 5, hrr, 'filled');
+title('Optimized');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+
+subplot(1,2,2)
+sproj = (sources_data(:,1:9)./gamma) * ret_eigvec;
+scatter(U_scores(:,1), sproj(:,1), 5, hrr, 'filled');
+title('PCA');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 24 16];
+
+% Parity plot of reconstruction error
+figure;
+rec_data_rot = uscores * aopt';
+scatter(X_scaled(:,1), rec_data_rot(:,1), 5, 'b', 'filled', 'MarkerFaceAlpha',0.1); hold on;
+rec_unsc = U_scores * ret_eigvec';
+scatter(X_scaled(:,1), rec_unsc(:,1), 5, 'r', 'filled', 'MarkerFaceAlpha',0.1);
+plot([min(X_scaled(:,1)) max(X_scaled(:,1))], [min(X_scaled(:,1)) max(X_scaled(:,1))], 'k--', 'LineWidth',2);
+xlabel('Original');
+ylabel('Reconstructed');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+ax.Box = 'on';
+legend('PCA', 'Optimization', 'interpreter', 'latex', 'location', 'northwest');
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 16 12];
+
+%% Test the scaling optimization
+scal_crit = 1;
+X_center = center(X, 1);
+[X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
+
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X, 1, scal_crit, 4, 2); 
+
+fun = @(g) cost_function_pca(g, X_scaled, sources_data(:,1:9)./gamma, 1, 1e-5);
+x0 = ones(length(gamma_pre), 1)';
+options = optimoptions("fmincon",...
+    "Algorithm","interior-point",...
+    "EnableFeasibilityMode",true,...
+    "SubproblemAlgorithm","cg");
+
+A = [];
+b = [];
+Aeq = [];
+beq = [];
+lb = [];
+ub = [];
+[gamma_opt,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub);
+
+gamma_eff = gamma_pre./gamma_opt;
+
+% Calculate PCA with the new scaling
+X_scaled_opt = X_scaled ./ gamma_opt;
+
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec_opt, n_eig, U_scores_opt, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X_scaled_opt, 0, 0, 4, 2); 
+
+% Scatter plot
+figure; subplot(1,2,1);
+sproj_opt = (sources_data(:,1:9) ./ gamma_eff)*ret_eigvec_opt;
+scatter(U_scores_opt(:,1), sproj_opt(:,1), 5, hrr, 'filled');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('Optimized');
+
+subplot(1,2,2);
+sproj = (sources_data(:,1:9) ./ gamma_pre)*ret_eigvec;
+scatter(U_scores(:,1), sproj(:,1), 5, hrr, 'filled');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('Normal scaling');
+
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 24 16];
+
 
 
 %% Test conditional variance on non linear functions
