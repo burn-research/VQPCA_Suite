@@ -17,7 +17,7 @@ scatter(xx, yy, 10, 'k', 'filled', 'MarkerFaceAlpha',0.5);
 hold on;
 
 % Calculate conditional mean and conditional variance
-[cmean, xmean] = conditional_mean(xx, yy);
+[cmean, xmean] = conditional_mean(xx, yy, 50);
 [cvar, xvar] = conditional_variance(xx, yy, 50);
 
 plot(xmean, cmean, 'r-', 'LineWidth',2);
@@ -239,7 +239,7 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 24 12];
 
 %% Try to perform a 1-dimensional optimization of the metric
-scal_crit = 1;
+scal_crit = 0;
 X_center = center(X, 1);
 [X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
 
@@ -301,7 +301,7 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
 
 %% Test the scaling optimization
-scal_crit = 1;
+scal_crit = 2;
 X_center = center(X, 1);
 [X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
 
@@ -309,7 +309,7 @@ X_center = center(X, 1);
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
     pca_lt(X, 1, scal_crit, 4, 2); 
 
-fun = @(g) cost_function_pca(g, X_scaled, sources_data(:,1:9)./gamma, 1, 1e-5);
+fun = @(g) cost_function_pca(g, X_scaled, sources_data(:,1:9)./gamma, 1, 1e-6);
 x0 = ones(length(gamma_pre), 1)';
 options = optimoptions("fmincon",...
     "Algorithm","interior-point",...
@@ -353,7 +353,62 @@ title('Normal scaling');
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 24 16];
 
+% Scatter plot of scaled data
+figure;
+scatter(f, X_scaled_opt(:,4), 5, hrr, 'filled');
 
+%% Test the scaling optimization with non linear scaling
+X_scaled = NonLinearScaling(X, 0.5);
+
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X, 0, 0, 4, 2); 
+
+fun = @(p) cost_function_exp(p, X, sources_data(:,1:9), 1, 1e-6);
+x0 = 0.5;
+options = optimoptions("fmincon",...
+    "Algorithm","interior-point",...
+    "EnableFeasibilityMode",true,...
+    "SubproblemAlgorithm","cg");
+
+A = [];
+b = [];
+Aeq = [];
+beq = [];
+lb = [];
+ub = [];
+[p_opt,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub);
+
+% Calculate PCA with the new scaling
+X_scaled_opt = NonLinearScaling(X, p_opt);
+
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec_opt, n_eig, U_scores_opt, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X_scaled_opt, 0, 0, 4, 2); 
+
+% Scatter plot
+figure; subplot(1,2,1);
+sproj_opt = NonLinearScaling(sources_data(:,1:9), p_opt);
+scatter(U_scores_opt(:,1), sproj_opt(:,1), 5, hrr, 'filled');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('Optimized');
+
+subplot(1,2,2);
+sproj = (sources_data(:,1:9) ./ gamma)*ret_eigvec;
+scatter(U_scores(:,1), sproj(:,1), 5, hrr, 'filled');
+xlabel('$Z_1$');
+ylabel('$\dot{\omega}_{Z1}$');
+ax = gca; ax.TickLabelInterpreter = 'latex';
+title('Normal scaling');
+
+fig = gcf; fig.Units = 'centimeters';
+fig.Position = [15 15 24 16];
+
+% Scatter plot of scaled data
+figure;
+scatter(f, X_scaled_opt(:,4), 5, hrr, 'filled');
 
 %% Test conditional variance on non linear functions
 
@@ -423,10 +478,9 @@ ylabel('$\chi_{x2}$');
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
 
+%% Test NonLinearMean
 
-
-
-
-
-
+nu1 = NonLinearMean(xx, yy, 25);
+nu2 = NonLinearMean(xx, yy3, 25);
+nu3 = NonLinearMean(xx, yys, 25);
 
