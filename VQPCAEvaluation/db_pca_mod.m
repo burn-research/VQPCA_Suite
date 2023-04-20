@@ -25,7 +25,7 @@ k = max(idx);
 % Check if number of cluster is equal to 1
 if k == 1
     disp('Number of clusters should be bigger than 1');
-    db = 0.25;
+    db = 10;
     return
 end
 
@@ -40,6 +40,8 @@ end
 
 % Get reconstruction error
 rec_err_clust = zeros(k,1);
+n_eig_c = zeros(k,1);
+
 for i = 1 : k
 
     % Perform PCA
@@ -72,9 +74,12 @@ for i = 1 : k
             % Merge the clusters
             X_ij = [X_clust{i}; X_clust{j}];
 
+            % Number of components as the maximum between the two
+            ncomp = max(n_eig_c(i), n_eig_c(j));
+
             % Perform PCA
             [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-                pca_lt(X_ij, 1, 0, stop_rule, inputs);
+                pca_lt(X_ij, 1, 0, 1, inputs);
 
             % Get reconstruction error
             rec_err = sum((X_ij-rec_data).^2);
@@ -83,7 +88,7 @@ for i = 1 : k
             eps_ij = mean(rec_err);
             
             % Get the maximum between all the clusters pairs
-            db_iter = max(db_iter,(eps_i + eps_j)/eps_ij);
+            db_iter = max(db_iter, (eps_i + eps_j)/eps_ij);
 
         end
     end

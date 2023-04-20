@@ -34,6 +34,7 @@ if strcmp(init, 'uniform1')
 
 % Random
 elseif strcmp(init, 'random')
+    rng(1000);                    % for reproducubility
     C_int = randsample(rows, k);
     C = X(C_int, :);
 
@@ -61,12 +62,13 @@ elseif strcmp(init, 'PCA')
 
 % Initialize with best random of 10 initial iterations
 elseif strcmp(init, 'best_DB')
-    it_init = 20;
+    it_init = 10;
     fprintf('Initializing from the best of initial %d iterations /n', it_init);
     rec_err_init = zeros(it_init, 1);
     C_init = cell(it_init, 1);
     db_init = zeros(it_init, 1);
     for i = 1 : it_init
+        rng(1000);
         C_int = randsample(rows, k);
         C = X(C_int, :);
         C_init{i} = C;

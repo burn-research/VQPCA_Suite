@@ -352,10 +352,12 @@ end
 % i.e. by conditioning the data on the mixture fraction
 
 % Select centering and scaling criteria for PCA
-cent_crit = 0;
+cent_crit = 1;
 scal_crit = 0;
 
 min_var_expl_clust = ones(k,1);
+
+mkdir Snapshots;
 
 while ((convergence == 0) && (iter < iter_max))
     
@@ -365,7 +367,7 @@ while ((convergence == 0) && (iter < iter_max))
 
     sq_rec_err = zeros(rows, k);
     sq_rec_err_pen = zeros(rows, k);
-    
+
     if ((VQ==2 && iter == 0))
 
         % Check if opt.F exists
@@ -418,7 +420,21 @@ while ((convergence == 0) && (iter < iter_max))
     % Classical reconstruction error
     [rec_err_min, idx] = min(sq_rec_err, [], 2);
     rec_err_min_rel = (rec_err_min);
-    
+
+
+    % Figure for animation
+    if isfield(opt, 'SaveSnapshots') == true
+        figure(1);
+        scatter(scal_X(:,1), scal_X(:,2), 10, idx, 'filled');
+        fig = gcf; fig.Units = 'centimeters';
+        fig.Position = [15 15 16 12];
+        figname = append('Snapshots/Snapshot', num2str(iter), '.png');
+        xlabel('$x_1$');
+        ylabel('$x_2$');
+        ax = gca; ax.TickLabelInterpreter = 'latex';
+        saveas(gcf, figname);
+    end
+        
     % Squared reconstruction error of each observation, in each cluster
     [sq_err_clust, nz_idx_clust, k] = partition(rec_err_min, idx, k);
     
@@ -484,6 +500,19 @@ while ((convergence == 0) && (iter < iter_max))
         
         eps_rec_var = abs((eps_rec_new  - eps_rec) / eps_rec_new);
         fprintf('\nReconstruction error variance equal to %d \n', eps_rec_var);
+
+        % Check if eps_rec_new is a float
+        if isempty(eps_rec_new)
+            eps_rec_new = 0;
+            idx = ones(rows, 1);
+            warning('Eps rec new is not a variable anymore, something went wrong');
+        end
+
+        if k == 1
+            warning('Only one cluster was found, maybe something went wrong?');
+            idx = ones(rows,1);
+            convergence = 1;
+        end
 
         if ((eps_rec_var < r_tol) && (eps_rec_new > eps_rec_min) ...
                 && (n_eigs < n_eigs_max)) 
@@ -662,7 +691,7 @@ infos.X_ave_clust = X_ave_clust;
 infos.Loadings = loadings;
 infos.RecData = rec_data;
 infos.NzIdxClust = nz_idx_clust;
-
+infos.RecErrField = rec_err_min;
 cd ..
                 
     

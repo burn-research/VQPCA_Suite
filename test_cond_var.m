@@ -8,23 +8,6 @@ set(0, 'defaulttextinterpreter', 'latex');
 % Addpath
 addpath(genpath('/Users/mattepsavarese/Desktop/Dottorato/Github/LocalPCA_Suite'));
 
-%% Create a non-linear curve with some noise
-xx = linspace(-1, 1, 2001)';
-yy = 1 - 0.5*xx + 0.3*xx.^2 + 0.5*randn(2001,1).*xx;
-
-figure;
-scatter(xx, yy, 10, 'k', 'filled', 'MarkerFaceAlpha',0.5);
-hold on;
-
-% Calculate conditional mean and conditional variance
-[cmean, xmean] = conditional_mean(xx, yy, 50);
-[cvar, xvar] = conditional_variance(xx, yy, 50);
-
-plot(xmean, cmean, 'r-', 'LineWidth',2);
-
-figure;
-plot(xvar, cvar, 'b-', 'LineWidth',2);
-
 %% Use a more complex dataset
 close all;
 clear all;
@@ -71,8 +54,8 @@ xlabel('F [-]');
 ylabel('T [K]');
 
 cb = colorbar;
-cb.Label.String = 'Hrr $[W/m^3]$';
 cb.Label.Interpreter = 'latex';
+cb.Label.String = '$\dot{\omega}_T$';
 colormap jet;
 cb.TickLabelInterpreter = 'latex';
 
@@ -93,12 +76,12 @@ pc_sources = (sources_data(:,1:9)./gamma) * ret_eigvec(1:end,:);
 
 figure;
 scatter3(U_scores(:,1), U_scores(:,2), pc_sources(:,1), 10, hrr, 'filled');
+ax = gca; ax.TickLabelInterpreter = 'latex';
 xlabel('$PC_1$');
 ylabel('$\dot{\omega}_{PC_1}$');
-ax = gca; ax.TickLabelInterpreter = 'latex';
 cb = colorbar;
-cb.Label.String = '$\dot{\omega}_T$';
 cb.Label.Interpreter = 'latex';
+cb.Label.String = '$\dot{\omega}_T$';
 cb.TickLabelInterpreter = 'latex';
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
@@ -239,7 +222,7 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 24 12];
 
 %% Try to perform a 1-dimensional optimization of the metric
-scal_crit = 0;
+scal_crit = 1;
 X_center = center(X, 1);
 [X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
 
@@ -301,13 +284,13 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
 
 %% Test the scaling optimization
-scal_crit = 2;
+scal_crit = 1;
 X_center = center(X, 1);
 [X_scaled, gamma_pre] = scale(X_center, X, scal_crit);
 
 % Perform PCA with auto scaling
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-    pca_lt(X, 1, scal_crit, 4, 2); 
+    pca_lt(X, 1, scal_crit, 4, 3); 
 
 fun = @(g) cost_function_pca(g, X_scaled, sources_data(:,1:9)./gamma, 1, 1e-6);
 x0 = ones(length(gamma_pre), 1)';
@@ -331,7 +314,7 @@ X_scaled_opt = X_scaled ./ gamma_opt;
 
 % Perform PCA with auto scaling
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec_opt, n_eig, U_scores_opt, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-    pca_lt(X_scaled_opt, 0, 0, 4, 2); 
+    pca_lt(X_scaled_opt, 0, 0, 4, 3); 
 
 % Scatter plot
 figure; subplot(1,2,1);
@@ -358,14 +341,17 @@ figure;
 scatter(f, X_scaled_opt(:,4), 5, hrr, 'filled');
 
 %% Test the scaling optimization with non linear scaling
-X_scaled = NonLinearScaling(X, 0.5);
+scal_crit = 2;
+X_center = center(X, 1);
+[X_scaled, gamma_s] = scale(X_center, X, scal_crit);
+X_scaled_nl = NonLinearScaling(X, 0.5);
 
 % Perform PCA with auto scaling
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-    pca_lt(X, 0, 0, 4, 2); 
+    pca_lt(X_scaled, 0, 0, 4, 4); 
 
-fun = @(p) cost_function_exp(p, X, sources_data(:,1:9), 1, 1e-6);
-x0 = 0.5;
+fun = @(p) cost_function_exp(p, X_scaled, sources_data(:,1:9)./gamma_s, 1, 1e-6);
+x0 = 0.9;
 options = optimoptions("fmincon",...
     "Algorithm","interior-point",...
     "EnableFeasibilityMode",true,...
@@ -375,31 +361,32 @@ A = [];
 b = [];
 Aeq = [];
 beq = [];
-lb = [];
-ub = [];
-[p_opt,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub);
+lb = [0.3];
+ub = [2.0];
 
-% Calculate PCA with the new scaling
-X_scaled_opt = NonLinearScaling(X, p_opt);
+% Optimization problem
+[p_opt,fval,exitflag,output,lambda,grad,hessian] = fmincon(fun,x0,A,b,Aeq,beq,lb,ub);
 
 % Perform PCA with auto scaling
 [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec_opt, n_eig, U_scores_opt, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
-    pca_lt(X_scaled_opt, 0, 0, 4, 2); 
+    pca_lt(X_scaled, 0, 0, 4, 4); 
 
 % Scatter plot
 figure; subplot(1,2,1);
-sproj_opt = NonLinearScaling(sources_data(:,1:9), p_opt);
-scatter(U_scores_opt(:,1), sproj_opt(:,1), 5, hrr, 'filled');
+sproj_opt = NonLinearScaling(sources_data(:,1:9)./gamma_s * ret_eigvec_opt, p_opt);
+scatter3(U_scores_opt(:,1), U_scores_opt(:,2), sproj_opt(:,1), 5, hrr, 'filled');
 xlabel('$Z_1$');
-ylabel('$\dot{\omega}_{Z1}$');
+ylabel('$Z_2$');
+zlabel('$\dot{\omega}_{Z1}$');
 ax = gca; ax.TickLabelInterpreter = 'latex';
 title('Optimized');
 
 subplot(1,2,2);
-sproj = (sources_data(:,1:9) ./ gamma)*ret_eigvec;
-scatter(U_scores(:,1), sproj(:,1), 5, hrr, 'filled');
+sproj = (sources_data(:,1:9) ./ gamma_s)*ret_eigvec;
+scatter3(U_scores(:,1), U_scores(:,2), sproj(:,1), 5, hrr, 'filled');
 xlabel('$Z_1$');
-ylabel('$\dot{\omega}_{Z1}$');
+ylabel('$Z_2$');
+zlabel('$\dot{\omega}_{Z1}$');
 ax = gca; ax.TickLabelInterpreter = 'latex';
 title('Normal scaling');
 
@@ -408,7 +395,25 @@ fig.Position = [15 15 24 16];
 
 % Scatter plot of scaled data
 figure;
-scatter(f, X_scaled_opt(:,4), 5, hrr, 'filled');
+scatter(f, X_scaled(:,4), 5, hrr, 'filled');
+
+% Save matrices for regression
+savemanifolds = input('Save the manifolds? Enter yes or no: ', 's');
+if strcmp(savemanifolds, 'yes')
+    file1 = append('/Users/matteosavarese/Desktop/Dottorato/SANDIA/NonLinearMetric/CSV_file/', ...
+        'Manifold_optmized.txt');
+    
+    file2 = append('/Users/matteosavarese/Desktop/Dottorato/SANDIA/NonLinearMetric/CSV_file/', ...
+        'Manifold_regular.txt');
+    
+    X_optimized = [U_scores_opt sproj_opt];
+    X_regular   = [U_scores sproj];
+    
+    writematrix(X_optimized, file1);
+    writematrix(X_regular, file2);
+end
+
+disp(p_opt);
 
 %% Test conditional variance on non linear functions
 
@@ -478,9 +483,68 @@ ylabel('$\chi_{x2}$');
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
 
-%% Test NonLinearMean
+%% Test rotation matrices
+scal_crit = 1;
+npc = 4;
 
-nu1 = NonLinearMean(xx, yy, 25);
-nu2 = NonLinearMean(xx, yy3, 25);
-nu3 = NonLinearMean(xx, yys, 25);
+X_center = center(X, 1);
+X_scaled = scale(X_center, X, scal_crit);
 
+% Global PCA
+% Perform PCA with auto scaling
+[sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
+    pca_lt(X, 1, scal_crit, 4, npc); 
+
+% Use kmeans
+k = 4;
+idx = kmeans(X_scaled, k, 'Start','uniform');
+
+local_basis  = cell(k,1);
+idx_clust    = cell(k,1);
+local_scores = cell(k,1);
+local_scores_tot = cell(k,1);
+
+% Local PCA in the k-means clusters
+for i = 1 : k
+    idx_clust{i} = find(idx==i);
+    X_clust = X_scaled(idx==i,:);
+    [~, local_basis{i}, ~, ~, ~, local_scores{i}, ~, ~, ~, ~, ~] = ...
+        pca_lt(X_clust, 0, 0, 4, npc);
+    local_scores_tot{i} = X_clust * local_basis{i};
+end
+
+U_scores_tot = X_scaled * sort_eigvec;
+
+% Back-rotation
+for i = 1 : k
+    figure;
+    B1 = sort_eigvec' * local_basis{i};  
+    U_rot = U_scores(idx_clust{i},:) * B1(1:npc, 1:npc);
+    scatter(local_scores{i}(:,1), U_rot(:,1), 10, 'filled'); hold on;
+    scatter(local_scores{i}(:,1), local_scores{i}(:,1), 2, 'r', 'filled');
+    tit = append('Cluster ', num2str(i));
+    xlabel('U original');
+    ylabel('U rotated');
+    fig = gcf; fig.Units = 'centimeters';
+    fig.Position = [15 15 12 10];
+    ax = gca; ax.TickLabelInterpreter = 'latex';
+end
+close all;
+
+% Back-rotation tot
+for i = 1 : k
+    figure;
+    B1 = sort_eigvec' * local_basis{i};  
+    U_rot_tot = U_scores_tot(idx_clust{i},:) * B1;
+    scatter(local_scores_tot{i}(:,1), U_rot_tot(:,1), 10, 'filled'); hold on;
+    scatter(local_scores_tot{i}(:,1), local_scores_tot{i}(:,1), 2, 'r', 'filled');
+    tit = append('Cluster ', num2str(i));
+    xlabel('U original');
+    ylabel('U rotated');
+    fig = gcf; fig.Units = 'centimeters';
+    fig.Position = [15 15 12 10];
+    ax = gca; ax.TickLabelInterpreter = 'latex';
+end
+
+figure;
+scatter(f, X(:,1), 10, idx, 'filled');
