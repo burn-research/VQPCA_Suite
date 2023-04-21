@@ -36,7 +36,6 @@ sq_rec_err = zeros(m2, k);
 for j = 1 : k
     C_mat = repmat(C(j,:), m2, 1);
     rec_err_os = (Y - C_mat - (Y - C_mat) * eigvec{j} * eigvec{j}');
-    disp(size(rec_err_os)); pause;
     sq_rec_err(:, j) = sum(rec_err_os.^2, 2);
 end
 
