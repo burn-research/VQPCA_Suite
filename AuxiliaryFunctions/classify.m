@@ -18,6 +18,8 @@ if np ~= length(idx)
     error('X and idx should have same length');
 end
 
+[npy, nvy] = size(Y);
+
 if nv ~= size(Y, 2)
     error('X and Y must have same number of variables');
 end
@@ -35,9 +37,9 @@ for i = 1 : k
 end
 
 % For each observation calculate the squared reconstruction error
-sq_rec_err = zeros(np, k);
+sq_rec_err = zeros(npy, k);
 for j = 1 : k
-    C_mat = repmat(C(j,:), np, 1);
+    C_mat = repmat(C(j,:), npy, 1);
     rec_err_os = (Y - C_mat - (Y - C_mat)  * eigs{j} * eigs{j}');
     sq_rec_err(:, j) = sum(rec_err_os.^2, 2);
 end

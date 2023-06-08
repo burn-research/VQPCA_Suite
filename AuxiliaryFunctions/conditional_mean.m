@@ -3,7 +3,7 @@ function [cmean, xmean] = conditional_mean(x, y)
 
 % Number of bins
 nbins = ceil(length(x)/500);
-nbins = 100;
+nbins = 50;
 
 % Bin the x variable
 h1 = histogram(x, nbins, 'Visible','off');
