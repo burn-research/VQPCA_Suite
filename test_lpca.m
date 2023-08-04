@@ -39,9 +39,7 @@ cb = colorbar;
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 14 12];
 
-%% Check that rotation holds
 
-% Apply global PCA
 
 
 
