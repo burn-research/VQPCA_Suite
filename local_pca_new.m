@@ -485,6 +485,10 @@ while ((convergence == 0) && (iter < iter_max))
         eps_rec_var = abs((eps_rec_new  - eps_rec) / eps_rec_new);
         fprintf('\nReconstruction error variance equal to %d \n', eps_rec_var);
 
+        if isempty(eps_rec_var)
+            error('All the clusters where somehow deleted. Please, check your data, or the initialization, or the scaling...');
+        end
+
         if ((eps_rec_var < r_tol) && (eps_rec_new > eps_rec_min) ...
                 && (n_eigs < n_eigs_max)) 
             n_eigs = n_eigs + 1;
