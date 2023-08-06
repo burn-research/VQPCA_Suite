@@ -265,64 +265,16 @@ elseif VQ == 2
     %The stoichiometric Z should be known.
 end
 
-%% Initialization of eigenvectors
-n_eigs_max = columns-1;
-if isfield(opt, 'InitEigs') == false
-    init_eigs = 1;
-else
-    init_eigs = opt.InitEigs;
-    if init_eigs ~= 1 || init_eigs ~= 2
-        warning('InitEigs specified is not valid. Eigenvectors will be initialized as ones vector');
-    end
+%% Initialization of eigenvectors and gamma
+gamma = cell(k, 1);
+for j = 1 : k
+    gamma{j} = ones(1, columns);
 end
 
-% Number of eigenvectors for start
-if isfield(opt, 'EigsStart') == false
-    n_eigs = 2;
-else
-    n_eigs = opt.EigsStart;
-    if n_eigs > n_eigs_max
-        warning('Too many eigenvectors!');
-        n_eigs = n_eigs_max;
-    end
-end
+% Initialize eigenvectors
+eigvec = initialize_eigenvectors(scal_X, k, opt);
 
-% Initialization as ones and zeros vectors
-if init_eigs == 1
-    fprintf('\nInitialization of the eigenvectors as ones and zeros vectors \n');
-    eigvec = cell(k, 1);
-    gamma = cell(k, 1);
-    for j = 1 : k
-        eigvec{j} = eye(columns, n_eigs);
-        gamma{j} = ones(1, columns);
-    end
-    
-% Initialization from previous PCA
-elseif init_eigs == 2
-    fprintf('\n Initialization of the eigenvectors from preliminary PCA \n');
-    eigvec = cell(k, 1);
-    gamma = cell(k, 1);
-    for j = 1 : k
-        [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma{j}] ...
-            = pca_lt(X, pre_cent_crit, pre_scal_crit, stop_rule, input);
-        eigvec{j} = ret_eigvec;
-    end
-
-% Initialization from the starting clustering, valid only if Peppe init is
-% used
-elseif init_eigs == 3
-    fprintf('\n Initialization of the eigenvectors from first PCA \n');
-    eigvec = cell(k, 1);
-    gamma = cell(k, 1);
-    X_clust = clustering(scal_X, idx);
-    for j = 1 : k
-        [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma{j}] ...
-            = pca_lt(X_clust{j}, 0, 0, stop_rule, input);
-        eigvec{j} = ret_eigvec;
-    end
-end
-
-% CREATE A DIRECTORY FOR THE OUTPUTS
+%% CREATE A DIRECTORY FOR THE OUTPUTS
 thetime = clock;
 thetimestr = datestr(thetime);
 dirname = [VQ_name '_n_clust_' num2str(k) '_n_eig_' num2str(n_eigs) '_' ...
