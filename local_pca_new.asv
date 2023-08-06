@@ -366,18 +366,9 @@ while ((convergence == 0) && (iter < iter_max))
         % Get reconstruction errors
         eps_rec_clust = zeros(k,1);
         for j = 1 : k
-
-            if cent_crit == 1
-                diff = (scal_X(idx==j) - mean(scal_X(idx==j)) - rec_data{j});
-            else
-                diff = scal_X(idx==j) - rec_data{j};
-            end
-
-            eps_rec_clust(j) = mean(sum(diff.^2));
-
-        end
             
-        cd ../
+            
+
         return
 
     end
