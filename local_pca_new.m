@@ -272,7 +272,8 @@ for j = 1 : k
 end
 
 % Initialize eigenvectors
-eigvec = initialize_eigenvectors(scal_X, k, opt);
+[eigvec, n_eigs] = initialize_eigenvectors(scal_X, k, opt);
+n_eigs_max = columns-1;
 
 %% CREATE A DIRECTORY FOR THE OUTPUTS
 thetime = clock;

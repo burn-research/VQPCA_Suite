@@ -1,4 +1,4 @@
-function [eigvec] = initialize_eigenvectors(X, k, opt)
+function [eigvec, n_eigs] = initialize_eigenvectors(X, k, opt)
 % This function returns the initialization of the eigenvectors matrix
 % eigvec and the eigenvalues gamma. 
 % INPUTS:
@@ -27,6 +27,8 @@ else
         n_eigs_start = 2;
     end
 end
+
+n_eigs = n_eigs_start;
 
 if isfield(opt, 'InitEigs') == false
 
