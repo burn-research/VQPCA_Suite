@@ -1,4 +1,4 @@
-function [db] = db_pca_mod(X, idx, stop_rule, inputs)
+function [db] = db_pca(X, idx, stop_rule, inputs)
 % This function will calculate a metric which could be use for a
 % qualitative comparison between different clusterings using VQPCA, as an
 % extension of the DB index.
