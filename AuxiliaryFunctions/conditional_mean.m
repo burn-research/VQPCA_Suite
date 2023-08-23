@@ -1,13 +1,11 @@
 function [cmean, xmean] = conditional_mean(x, y, nbins)
 % This function calculates the conditional mean of y given x
 
-<<<<<<< HEAD
-=======
+
 % Number of bins
 % nbins = ceil(length(x)/500);
 % nbins = 50;
 
->>>>>>> tmp
 % Bin the x variable
 h1 = histogram(x, nbins, 'Visible','off');
 

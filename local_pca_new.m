@@ -323,21 +323,28 @@ while ((convergence == 0) && (iter < iter_max))
 
         % Check if opt.F exists
         if isfield(opt, 'F') == false
-            error('FPCA was selected but no mixture fraction was specified. Please specify mixture fraction as opt.F = array');
+            error('FPCA was selected but no Binning variable was specified. Please specify it opt.F = array');
         else
             F = opt.F;
         end
 
         % Check if stoichiometric mixture fraction was specified
         if isfield(opt, 'Fs') == false
-            error('opt.FStoich not specified. Please specify it as float');
+            warning('opt.FStoich not specified. ');
+            F_stoich = [];
+
         else
             F_stoich = opt.Fs;
         end
         F_min = min(F);
         F_max = max(F);
 
-        [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
+        if isempty(F_stoich) == false
+            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
+        else
+            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max);
+        end
+
         C = zeros(k, columns);
         for j = 1 : k
             C(j, :) = mean(nz_X_k{j}, 1);

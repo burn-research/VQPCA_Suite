@@ -17,9 +17,9 @@ opt.Center = 1;
 opt.Algorithm = 'FPCA';
 opt.Init = 'uniform';
 opt.F = data_f;
-opt.Fs = fs;
+% opt.Fs = fs;
 
-[idx, infos] = local_pca_new(data_ss, 5, 4, 2, opt);
+[idx, infos] = local_pca_new(data_ss, 10, 4, 2, opt);
 
 
 [bin_data, idx_clust] = condition(data_ss, data_f, 10, 0, 1, ...
