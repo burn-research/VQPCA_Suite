@@ -336,13 +336,14 @@ while ((convergence == 0) && (iter < iter_max))
         else
             F_stoich = opt.Fs;
         end
+
         F_min = min(F);
         F_max = max(F);
 
         if isempty(F_stoich) == false
             [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
         else
-            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max);
+            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
         end
 
         C = zeros(k, columns);

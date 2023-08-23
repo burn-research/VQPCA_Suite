@@ -72,7 +72,11 @@ if nargin == 5
 end
 
 if nargin == 6
-    cond_type = 'non_uniform';
+    if isempty(z_stoich) == false
+        cond_type = 'non_uniform';
+    else
+        cond_type = 'uniform';
+    end
 end
 
 % Number of intervals
