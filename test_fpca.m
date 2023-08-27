@@ -20,7 +20,6 @@ opt.F = data_f;
 
 [idx, infos] = local_pca_new(data_ss, 10, 4, 2, opt);
 
+[bin_data, idx_clust, idx_fpca] = fpca_new(data_ss, data_f, 10, opt);
 
-[bin_data, idx_clust] = fpca_new(data_ss, data_f, 10, opt);
-
-scatter(data_f, data_ss(:,1), 10, idx, 'filled');
+scatter(data_f, data_ss(:,1), 10, idx_fpca, 'filled');

@@ -26,7 +26,7 @@
 % idx_clust       = Cell vector storing the indexes of the original data
 %                   points in the bins. 
 
-function [bin_data, idx_clust] = fpca_new(data, z, n_bins, opt)
+function [bin_data, idx_clust, idx] = fpca_new(data, z, n_bins, opt)
 
 % Check the inputs
 if size(z, 2) > 1
@@ -103,4 +103,11 @@ idx_clust = cell(n_bins, 1);
 for bin = 1 : n_bins  
     idx_clust{bin} = find((z >= ints(bin)) & (z <= ints(bin+1)));
     bin_data{bin} = data(idx_clust{bin}, :);
+end
+
+% Unravel idx_clust
+
+idx = zeros(length(z),1);
+for j = 1 : n_bins
+    idx(idx_clust{j}) = j;
 end

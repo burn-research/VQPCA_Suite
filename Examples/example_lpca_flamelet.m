@@ -79,3 +79,16 @@ cb.Ticks = [1:1:k];
 % Figure size
 fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
+
+%% Parity plot
+
+rec_data = infos.RecData;       
+nz_idx_clust = infos.NzIdxClust;
+gamma_pre = infos.gamma_pre;
+X_ave_pre = infos.X_ave_pre;
+
+% Reconstruct the data
+[rec_data_uncentered] = unscale_rec(rec_data, nz_idx_clust, gamma_pre, X_ave_pre);
+
+% Parity plot
+output = parity_plot(X, rec_data_uncentered);
