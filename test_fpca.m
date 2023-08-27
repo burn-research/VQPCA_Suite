@@ -17,12 +17,10 @@ opt.Center = 1;
 opt.Algorithm = 'FPCA';
 opt.Init = 'uniform';
 opt.F = data_f;
-% opt.Fs = fs;
 
 [idx, infos] = local_pca_new(data_ss, 10, 4, 2, opt);
 
 
-[bin_data, idx_clust] = condition(data_ss, data_f, 10, 0, 1, ...
-    0.19);
+[bin_data, idx_clust] = fpca_new(data_ss, data_f, 10, opt);
 
 scatter(data_f, data_ss(:,1), 10, idx, 'filled');

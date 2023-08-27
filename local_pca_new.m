@@ -332,19 +332,21 @@ while ((convergence == 0) && (iter < iter_max))
         if isfield(opt, 'Fs') == false
             warning('opt.FStoich not specified. ');
             F_stoich = [];
-
+            optFpca.Sampling = 'uniform';
         else
             F_stoich = opt.Fs;
+            optFpca.Fs = F_stoich;
+            optFpca.Sampling = 'non_uniform';
         end
 
         F_min = min(F);
         F_max = max(F);
 
-        if isempty(F_stoich) == false
-            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
-        else
-            [nz_X_k, nz_idx_clust] = condition(scal_X, F, k, F_min, F_max, F_stoich);
-        end
+        optFpca.MinZ = F_min;
+        optFpca.MaxZ = F_max;
+        
+        % Perform FPCA
+        [nz_X_k, nz_idx_clust] = fpca_new(scal_X, F, k, optFpca);
 
         C = zeros(k, columns);
         for j = 1 : k
