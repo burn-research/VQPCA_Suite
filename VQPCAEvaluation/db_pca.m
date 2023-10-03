@@ -78,13 +78,11 @@ for i = 1 : k
             ncomp = max(n_eig_c(i), n_eig_c(j));
 
             % Perform PCA
-<<<<<<< HEAD
             [~, ~, ~, ~, ~, ~, ~, ~, ~, rec_data, ~] = ...
                 pca_lt(X_ij, 1, 0, 4, ncomp);
-=======
+            
             [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
                 pca_lt(X_ij, 0, 0, stop_rule, inputs);
->>>>>>> tmp
 
             % Get reconstruction error
             rec_err = sum((X_ij-rec_data).^2);
