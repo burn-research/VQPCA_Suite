@@ -17,7 +17,7 @@ opt.Algorithm = 'VQPCA';
 opt.Init = 'uniform';
 
 k = 4;
-[idx, infos] = local_pca_new(X, k, 1, 0.99, opt);
+[idx, infos] = local_pca_new(X, k, 1, 0.9, opt);
 
 % Plot
 figure;
