@@ -10,7 +10,7 @@ Examples and test data are also available
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [License](#How to cite?)
+- [License](#license?)
 
 # Installation
 
@@ -25,7 +25,7 @@ addpath(genpath('LocalPCA_Suite'))
 
 Check the UserGuide provided in Docs
 
-# How to cite?
+# License?
 
 The software and the codes are free to use. Please, cite:
 
