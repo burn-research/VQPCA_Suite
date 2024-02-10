@@ -49,7 +49,9 @@ fig = gcf; fig.Units = 'centimeters';
 fig.Position = [15 15 16 12];
 
 %% Perform LPCA
-opt.Centering = 1;
+
+% Select options for VQPCA
+opt.Center = 1;
 opt.Scaling = 'auto';
 opt.Init = 'uniform1';
 opt.Algorithm = 'VQPCA';
@@ -67,6 +69,8 @@ X = state_space_data;
 [idx, infos] = local_pca_new(X, k, 1, 0.99, opt);
 
 %% Scatter plot of results
+
+% Create figure
 figure;
 scatter(f, state_space_data(:,1), 5, idx, 'filled');
 % Set axis labels
@@ -83,6 +87,7 @@ fig.Position = [15 15 16 12];
 
 %% Parity plot
 
+% Get information required from the infos fields
 rec_data = infos.RecData;       
 nz_idx_clust = infos.NzIdxClust;
 gamma_pre = infos.gamma_pre;
