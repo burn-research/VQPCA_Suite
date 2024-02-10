@@ -17,4 +17,6 @@ Examples and test data are also available
 
 Simply add the folder with all the subfolders to your MATLAB path.
 You can do this by typing:
-'addpath(genpath(<LocalPCA_Suite>))'
+```bash
+addpath(genpath(<LocalPCA_Suite>))
+```
