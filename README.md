@@ -25,7 +25,7 @@ addpath(genpath('LocalPCA_Suite'))
 
 Check the UserGuide provided in Docs
 
-# License?
+# License
 
 The software and the codes are free to use. Please, cite:
 
