@@ -1,0 +1,8 @@
+setup.py
+VQPCASuite/__init__.py
+VQPCASuite/clustering.py
+VQPCASuite/preprocess.py
+VQPCASuite.egg-info/PKG-INFO
+VQPCASuite.egg-info/SOURCES.txt
+VQPCASuite.egg-info/dependency_links.txt
+VQPCASuite.egg-info/top_level.txt

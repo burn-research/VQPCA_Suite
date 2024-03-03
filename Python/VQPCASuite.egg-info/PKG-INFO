@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: VQPCASuite
+Version: 1.0.0
+Summary: Python libraries for model order reduction, clustering and data analysis.
+Author: Matteo Savarese
+Author-email: matteo.savarese@ulb.be
+Keywords: Principal Component Analysis,clustering,dimensionality reduction,model order reduction
