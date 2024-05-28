@@ -37,16 +37,12 @@ class vqpca:
 
 
     # Initialization methods
-    def initialize_centroids(self, method='kmeans', Ci=None):
+    def initialize_centroids(self, method, Ci=None):
 
         '''This function will initialize the clusters centroids 
         using an avalibale method. Available methods are: uniform,
          k-means, random '''
-        
-        mlist = ["kmeans", "random", "uniform"]
-        if method not in mlist:
-            raise ValueError("Initialization method not recognized")
-        
+                
         if method == 'kmeans':
             # Centroids are initialized using k-means
             kmeans = KMeans(n_clusters=self.k_, random_state=0).fit(self.X_)
@@ -83,6 +79,9 @@ class vqpca:
             # Assign centroids to last group
             self.C_[-1,:] = np.mean(self.X_[-nlast:,:], axis=0)
 
+        else:
+            raise ValueError("Initialization method for centroids not recognized")
+
         return self
         
     def initialize_pca(self, n_start=2):
@@ -99,7 +98,7 @@ class vqpca:
         self.pca_ = pca_list
         return self
 
-    def fit(self, init_centroids="kmeans", n_start=2, verbose=True):
+    def fit(self, n_start=2, verbose=True, init_centroids='kmeans'):
 
         # Initialize global time
         st_global = time.time()
@@ -111,6 +110,7 @@ class vqpca:
 
         # Initialize centroids
         self.initialize_centroids(method=init_centroids)
+        
         # Initialize pca
         self.initialize_pca(n_start=n_start)
 
@@ -349,6 +349,8 @@ class vqpca:
             metric = silhouette_score(self.X_, self.labels_)
 
         return metric
+
+
 
         
 
