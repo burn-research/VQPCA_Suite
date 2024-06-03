@@ -319,20 +319,21 @@ class vqpca:
                 # Initialize db
                 db_iter = 0.0
                 for j in range(self.k_):
-                    # Reconstruction error in cluster j
-                    eps_j = rec_err_clust[j]
-                    # Merge cluster i and j
-                    X_ij = np.vstack((self.X_[self.labels_==i,:], self.X_[self.labels_==j]))
-                    # Perform PCA in the merged cluster
-                    pca = PCA(n_components=self.q_)
-                    pca.fit(X_ij)
-                    # Reconstruct Xij
-                    U_scores = pca.transform(X_ij)
-                    X_rec    = pca.inverse_transform(U_scores)
-                    # Reconstruction error of merged cluster
-                    eps_ij = np.mean(np.sum((X_ij - X_rec)**2, axis=1))
-                    # Get max between all the clusters pairs
-                    db_iter = max(db_iter, (eps_i + eps_j)/eps_ij)
+                    if j != i:
+                        # Reconstruction error in cluster j
+                        eps_j = rec_err_clust[j]
+                        # Merge cluster i and j
+                        X_ij = np.vstack((self.X_[self.labels_==i,:], self.X_[self.labels_==j,:]))
+                        # Perform PCA in the merged cluster
+                        pca = PCA(n_components=self.q_)
+                        pca.fit(X_ij)
+                        # Reconstruct Xij
+                        U_scores = pca.transform(X_ij)
+                        X_rec    = pca.inverse_transform(U_scores)
+                        # Reconstruction error of merged cluster
+                        eps_ij = np.mean(np.sum((X_ij - X_rec)**2, axis=1))
+                        # Get max between all the clusters pairs
+                        db_iter = max(db_iter, (eps_i + eps_j)/eps_ij)
 
                 metric += db_iter # Sum for the clusters
             

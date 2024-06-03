@@ -87,5 +87,5 @@ for j = 1 : columns
     scaled_data(:, j) = unscaled_data(:, j) / (gamma(1, j) + a_tol);
 end
 
-save gamma.out gamma -ASCII -DOUBLE
+% save gamma.out gamma -ASCII -DOUBLE
 %save scaled_data scaled_data

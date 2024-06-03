@@ -73,14 +73,8 @@ for i = 1 : k
             
             % Merge the clusters
             X_ij = [X_clust{i}; X_clust{j}];
-
-            % Number of components as the maximum between the two
-            ncomp = max(n_eig_c(i), n_eig_c(j));
-
-            % Perform PCA
-            [~, ~, ~, ~, ~, ~, ~, ~, ~, rec_data, ~] = ...
-                pca_lt(X_ij, 1, 0, 4, ncomp);
             
+            % Perform PCA
             [sort_eigval, sort_eigvec, ret_eigval, ret_eigvec, n_eig, U_scores, W_scores, gamma, scaled_data, rec_data, X_ave] = ...
                 pca_lt(X_ij, 0, 0, stop_rule, inputs);
 
