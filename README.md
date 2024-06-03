@@ -14,11 +14,20 @@ Examples and test data are also available
 
 # Installation
 
+### Matlab Installation
+
 Simply add the folder with all the subfolders to your MATLAB path.
 You can do this by typing:
 
 ```matlab
 addpath(genpath('LocalPCA_Suite'))
+```
+
+### Python Installation
+
+Enter the Python folder and type in your terminal:
+```python
+python setup.py install
 ```
 
 # Usage
