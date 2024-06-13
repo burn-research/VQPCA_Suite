@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 from VQPCASuite.clustering import vqpca
 from VQPCASuite.preprocess import Scaler
+import sys
 
 # ---------- 0) Data import section ---------- #
 
@@ -80,4 +81,24 @@ ax.set_ylabel('retained variance')
 fig.tight_layout()
 
 
+# %%
+
+# Data compression example
+from VQPCASuite.clustering import compressor
+
+# Compress data
+comp = compressor()
+comp.fit(X_scaled, q=0.9, verbose=True, scale=False)
+
+# Get scores
+U = comp.get_compressed_data()
+
+# Get total size of compressed data
+s = 0
+for i in range(comp.k_):
+    s += sys.getsizeof(U[i])
+
+s0 = sys.getsizeof(X_scaled)
+
+print("Compression ratio = ", s0/s)
 # %%

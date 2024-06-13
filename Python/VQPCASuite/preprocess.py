@@ -73,7 +73,7 @@ class Scaler:
         # Check if c and gamma exists already
         if hasattr(self, 'gamma') and hasattr(self, 'c') == False:
             raise ValueError("Fit the scaler before transforming other data using fit()")
-        Xi = (X + self.c) * self.gamma
+        Xi = (X) * self.gamma + self.c
         return Xi
     
 

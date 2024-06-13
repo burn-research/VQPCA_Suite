@@ -170,6 +170,8 @@ class vqpca:
             self.C_ = centroids_new
             self.labels_ = labels_new
             self.eps_    = np.mean(eps_rec_new)
+            # Get components
+            self.A_ = self.get_components()
 
             # Update iteration counter 
             iter += 1
@@ -379,6 +381,7 @@ class compressor:
         if scale:
             scaler = Scaler(method=scaling)
             Xscaled = scaler.fit_transform(X)
+            self.scaler_ = scaler
         else:
             Xscaled = X
         # Monitor resources
@@ -396,23 +399,36 @@ class compressor:
                 print("Compression via VQPCA done")
                 time.sleep(2)
                 self.monitor_resources()
-            # Get compressed data
+
+            # Reconstruct data
             Xrec = VQPCA.reconstruct(Xscaled)
             if verbose:
                 print("Reconstruction via VQPCA done")
                 time.sleep(2)
                 self.monitor_resources()
-            # Update self
-            self.Xrec_ = Xrec
-            self.X_ = X
+
             # End time
             et = time.time()
             elapsed_time = et - st
             logging.info(f"Script finished in {elapsed_time} seconds")
+
             # End RAM
             memory_info_end = process.memory_info()
             rss_end = memory_info_end.rss / (1024 * 1024 * 1024)  # Convert to GB
             print(f"Memory usage: {rss_start:.2f} GB -> {rss_end:.2f} GB (RSS)")
+
+            # Update attributes
+            self.k_ = k
+            self.q_ = q
+
+            # Get components
+            components = VQPCA.get_components()
+            self.A_ = components
+
+            # Update self
+            self.Xrec_ = Xrec
+            self.X_ = X
+            self.labels_ = VQPCA.labels_
 
         return Xrec
     
@@ -452,6 +468,24 @@ class compressor:
         scores["LocalPSNR"] = l_psnr
 
         return scores
+    
+    def get_compressed_data(self):
+
+        # Initialize list of scores
+        Uscores = []
+
+        for i in range(self.k_):
+            
+            # Get local PCA
+            A = self.A_[i]
+
+            # Get scores
+            U = self.X_[self.labels_==i] @ A
+            Uscores.append(U)
+
+        return Uscores
+    
+    
 
 
 
