@@ -449,6 +449,7 @@ class vqpls:
         return self
     
     def initialize_pls(self, X, Y):
+        '''This function initializes the PLS bases in the clusters'''
 
         self.pls = []
         for i in range(self.n_clusters):
@@ -611,6 +612,8 @@ class vqpls:
         return self
 
     def predict(self, X):
+        '''This function predicts Y (in PC transport, the source term) given
+        a matrix of data X'''
 
         # Initialize Y_pred
         Y_pred = np.zeros((X.shape[0], self.nY))
@@ -625,6 +628,8 @@ class vqpls:
         return Y_pred
     
     def score(self, X, Y):
+        '''This function returns the different scores of the model globally, namely the R2 score, 
+        the mean squared error and the mean absolute error'''
 
         # Initialize Y_pred
         Y_pred = self.predict(X)
@@ -642,6 +647,7 @@ class vqpls:
         return self
     
     def score_cluster(self, X, Y):
+        '''This function returns the model scores in the clusters'''
 
         from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
@@ -662,6 +668,7 @@ class vqpls:
         return r2_clust, mse_clust, mae_clust
     
     def transform(self, X):
+        '''This function projects the data X onto the X score space (Z scores)'''
 
         # Initialize Z_score
         Z_score = np.zeros((X.shape[0], self.n_components))
@@ -677,9 +684,11 @@ class vqpls:
     
     ###### Linear models section ######
     def train_linear_models(self, X, Y, test_size=0.20, regressor='linear', random_state=0):
+        
         '''This function  will train a linear regression model in each 
         cluster. Available regressors are:
         linear regression, Lasso  regression, Ridge regression'''
+
         from sklearn.linear_model import LinearRegression, Lasso, Ridge
         # Check if labels exists already as attribute
         if hasattr(self, 'labels') == False:
