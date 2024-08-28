@@ -1,6 +1,7 @@
 setup.py
 VQPCASuite/__init__.py
 VQPCASuite/clustering.py
+VQPCASuite/compression.py
 VQPCASuite/metrics.py
 VQPCASuite/preprocess.py
 VQPCASuite.egg-info/PKG-INFO

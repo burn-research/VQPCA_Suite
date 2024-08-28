@@ -1,6 +1,8 @@
 import numpy as np
 
 class Scaler:
+    '''This class can be used to pre-process data by performing centering and scaling
+    with different methods available'''
 
     # Default constructor
     def __init__(self, method, center=True):

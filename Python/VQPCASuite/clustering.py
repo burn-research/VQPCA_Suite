@@ -16,19 +16,13 @@ from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 class vqpca:
 
-    def __init__(self, X, k=2, stopping_rule="variance", q=0.99, itmax=200, atol=1e-8, rtol=1e-8, ctol=1e-6):
+    def __init__(self, X, stopping_rule="variance", itmax=200, atol=1e-8, rtol=1e-8, ctol=1e-6):
 
         # Data matrix
         self.X_ = X
         (nobs, nvars) = np.shape(X)
         self.n_obs_ = nobs
         self.nvars_ = nvars
-
-        # Number of clusters
-        self.k_ = k
-
-        # PCA stopping input
-        self.q_ = q
 
         # Stopping rule (check existence first)
         stop_list = ["variance", "n_eigs"]
@@ -105,7 +99,30 @@ class vqpca:
         self.pca_ = pca_list
         return self
 
-    def fit(self, n_start=2, verbose=True, init_centroids='kmeans'):
+    def fit(self, k=2, q=0.99, n_start=2, verbose=True, init_centroids='kmeans'):
+
+        '''The fit method runs the VQPCA routine. Note that the matrix X should be
+        previously specified when building the object via constructor
+        
+        Inputs:
+        k (int) = number of clusters
+        q (float) = amount of variance or number of principal components
+
+        (Optional)
+        n_start (int) = number of pcs used at the first iteration (default=2)
+        init_centroids (str) = method for initializing the centroids (default='k-means)
+                               available are: 'k-means', 'random', 'uniform'
+        verbose (bool) = print information (default=True)
+
+        Outputs:
+        labels_new (np array) = vector of integers corresponding to cluters' labels
+        '''
+
+        # Number of clusters
+        self.k_ = k
+
+        # PCA stopping input
+        self.q_ = q
 
         # Initialize global time
         st_global = time.time()
@@ -212,7 +229,10 @@ class vqpca:
     def reconstruct(self, X=None):
 
         '''This function will provide the reconstructed data. If the X is not
-        given, then the reconstructed data will be the original ones'''
+        given, then the reconstructed data will be the original ones
+        
+        Inputs:
+        X (2D NumPy array) = data matrix, can also be a new one. If None, the self.X_ matrix is used (default=None)'''
 
         # Check if X was given
         if X.all() == None:
