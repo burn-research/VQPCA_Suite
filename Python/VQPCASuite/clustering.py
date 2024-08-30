@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
-from sklearn.metrics import mean_squared_error, davies_bouldin_score, silhouette_score
 import time
 from datetime import datetime
 import os
@@ -324,59 +323,10 @@ class vqpca:
             np.savetxt(foldername + '/centroids.txt', self.C_)
 
         return self
-
-    ### VQPCA evaluation ###
-    def evaluate(self, score='ILPCA'):
-
-        # ILPCA score evaluation
-        if score == 'ILPCA':
-
-            # Calculate squared reconstruction error in the clusters
-            rec_err_clust = np.zeros(self.k_)
-            for i in range(self.k_):
-                U_scores = self.pca_[i].transform(self.X_[self.labels_==i])
-                X_rec = self.pca_[i].inverse_transform(U_scores)
-                rec_err_clust[i] = (np.mean(np.sum((self.X_[self.labels_==i] - X_rec)**2, axis=1)))
-
-            # Initialize metric
-            metric = 0.0
-            for i in range(self.k_):
-                # Reconstruction error in cluster i
-                eps_i = rec_err_clust[i]
-                # Initialize db
-                db_iter = 0.0
-                for j in range(self.k_):
-                    if j != i:
-                        # Reconstruction error in cluster j
-                        eps_j = rec_err_clust[j]
-                        # Merge cluster i and j
-                        X_ij = np.vstack((self.X_[self.labels_==i,:], self.X_[self.labels_==j,:]))
-                        # Perform PCA in the merged cluster
-                        pca = PCA(n_components=self.q_)
-                        pca.fit(X_ij)
-                        # Reconstruct Xij
-                        U_scores = pca.transform(X_ij)
-                        X_rec    = pca.inverse_transform(U_scores)
-                        # Reconstruction error of merged cluster
-                        eps_ij = np.mean(np.sum((X_ij - X_rec)**2, axis=1))
-                        # Get max between all the clusters pairs
-                        db_iter = max(db_iter, (eps_i + eps_j)/eps_ij)
-
-                metric += db_iter # Sum for the clusters
-            
-            # Average
-            metric = metric / self.k_
-
-        # If DB index was chosen
-        elif score == "DB":
-            metric = davies_bouldin_score(self.X_, self.labels_)
-
-        elif score == "silhouette":
-            metric = silhouette_score(self.X_, self.labels_)
-
-        return metric
     
 class vqpls:
+
+    '''This is the class that implements the Vector Quantization Partial Least Square routine.'''
 
     # Default constructor
     def __init__(self, ctol=1e-6, Rtol=1e-6,
@@ -478,10 +428,21 @@ class vqpls:
         return self
     
     def fit(self, X, Y, init='kmeans', n_clusters=2, n_components=3):
+
         ''' This function performs the VQPLS algorithm, which
         means assigning each point to a cluster and then fitting
         a PLS model to each cluster, such that the sum of the
-        squared residuals is minimized.'''
+        squared residuals is minimized.
+        
+        Inputs:
+        X (2D NumPy array): independent variables data matrix
+        Y (2D NumPy array): target variables data matrix
+        init (str): initialization method (available are 'kmeans', 'random', 'global_pls') (default='kmeanse')
+        n_clusters (int): number of clusters (default=2)
+        n_components (int): number of retained components (default=3)
+        
+        Outputs:
+        self: updated class with labels and PLS models'''
 
         # Initialize class attributes
         self.init = init
@@ -606,7 +567,16 @@ class vqpls:
         ''' This function train the local PLS models
         given another set of labels, without performing the
         VQPLS routine (might be useful when loading previously
-        saved idx solutions on large data)'''
+        saved idx solutions on large data)
+        
+        Inputs:
+        X (2D NumPy array): independent variables data matrix
+        Y (2D NumPy array): target variables data matrix
+        labels (1D NumPy array): cluster labels vector
+        n_components (int): number of retained components (default=3)
+        
+        Output:
+        self (vqpls class): updated class'''
 
         # Check shapes of X and Y
         if X.shape[0] != Y.shape[0]:
@@ -637,6 +607,7 @@ class vqpls:
         return self
 
     def predict(self, X):
+
         '''This function predicts Y (in PC transport, the source term) given
         a matrix of data X'''
 
@@ -653,6 +624,7 @@ class vqpls:
         return Y_pred
     
     def score(self, X, Y):
+
         '''This function returns the different scores of the model globally, namely the R2 score, 
         the mean squared error and the mean absolute error'''
 
@@ -672,6 +644,7 @@ class vqpls:
         return self
     
     def score_cluster(self, X, Y):
+
         '''This function returns the model scores in the clusters'''
 
         from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
@@ -693,6 +666,7 @@ class vqpls:
         return r2_clust, mse_clust, mae_clust
     
     def transform(self, X):
+
         '''This function projects the data X onto the X score space (Z scores)'''
 
         # Initialize Z_score
@@ -798,10 +772,20 @@ class vqpls:
     ##### Classification section #####
     def train_classifier(self, X, test_size=0.20, random_state=0,
                          n_estimators=100):
+        
         '''This function will train a random forest classifier
         on the training data used for the VQPLS routine. The classifier will
         be used to assign unseen observations to clusters and predict them
-        using the correct model'''
+        using the correct model
+        
+        Inputs:
+        X (NumPy array): data matrix
+        test_size (float): test data relative size (default=0.2)
+        random_state (int): random seed (default=0)
+        n_estimators (int): number of estimators in the decision tree (default=100)
+        
+        Output:
+        rf (RandomForestClassifier): the RFC in the scikit-learn implementation'''
 
         # Check if labels and linear models are already an attribute
         if hasattr(self, 'labels') == False:
@@ -835,144 +819,6 @@ class vqpls:
         idxc = self.classifier.predict(X)
         return idxc
     
-
-# ----------------- For data compression -------------------- #
-import psutil
-import logging
-
-class compressor:
-
-    # Default initializer
-    def __init__(self, method='vqpca'):
-        # Compression method
-        self.method_ = method
-
-    # Function to monitor resources
-    def monitor_resources(self):
-        cpu_usage = psutil.cpu_percent(interval=1)
-        memory_info = psutil.virtual_memory()
-        print(f"CPU usage: {cpu_usage}%")
-        print(f"Memory usage: {memory_info.percent}%")
-
-    # Function to compress the data
-    def fit(self, X, q=0.99, k=5, scale=True, scaling='auto', verbose=False):
-        # Monitor total execution time
-        st = time.time()
-        process = psutil.Process(os.getpid())
-        memory_info_start = process.memory_info()
-        rss_start = memory_info_start.rss / (1024 * 1024 * 1024)  # Convert to GB
-        # Data pre-processing
-        if scale:
-            scaler = Scaler(method=scaling)
-            Xscaled = scaler.fit_transform(X)
-            self.scaler_ = scaler
-        else:
-            Xscaled = X
-        # Monitor resources
-        if verbose:
-            print("Pre-processing done")
-            time.sleep(2)
-            self.monitor_resources()
-        # Initialize the compressor
-        if self.method_ == 'vqpca':
-            VQPCA = vqpca(Xscaled, k=k, stopping_rule="variance", q=q)
-            # Fit VQPCA
-            VQPCA.fit(verbose=False)
-            # Monitor usage
-            if verbose:
-                print("Compression via VQPCA done")
-                time.sleep(2)
-                self.monitor_resources()
-
-            # Reconstruct data
-            Xrec = VQPCA.reconstruct(Xscaled)
-            if verbose:
-                print("Reconstruction via VQPCA done")
-                time.sleep(2)
-                self.monitor_resources()
-
-            # End time
-            et = time.time()
-            elapsed_time = et - st
-            logging.info(f"Script finished in {elapsed_time} seconds")
-
-            # End RAM
-            memory_info_end = process.memory_info()
-            rss_end = memory_info_end.rss / (1024 * 1024 * 1024)  # Convert to GB
-            print(f"Memory usage: {rss_start:.2f} GB -> {rss_end:.2f} GB (RSS)")
-
-            # Update attributes
-            self.k_ = k
-            self.q_ = q
-
-            # Get components
-            components = VQPCA.get_components()
-            self.A_ = components
-
-            # Update self
-            self.Xrec_ = Xrec
-            self.X_ = X
-            self.labels_ = VQPCA.labels_
-
-        return Xrec
-    
-    def evaluate(self, custom_loss=False):
-
-        '''This function will evaluate several parameters:
-        the compression ratio, the loss in terms of MSE, NMSE,
-        NRMSE, peak signal-to-noise-ratio, structural similarity index,
-        for global and for each column of X'''
-
-        # Global metrics
-        g_mse = mean_squared_error(self.X_, self.Xrec_)
-        # Structural Similarity Index (SSIM)
-        g_ssim = ssim(self.X_, self.Xrec_)
-
-        print("Global MSE = ", g_mse)
-        print("Global SSIM = ", g_ssim)
-
-        # Metrics for each feature
-        l_mse = []
-        l_ssim = []
-        l_psnr = []
-        for i in range(np.shape(self.X_)[1]):
-            print(f" --- Evaluating feature {i} of {np.shape(self.X_)[1]} ---")
-            l_mse.append(mean_squared_error(self.X_[:,i],self.Xrec_[:,i]))
-            l_ssim.append(ssim(self.X_[:,i], self.Xrec_[:,i]))
-            l_psnr.append(psnr(self.X_[:,i], self.Xrec_[:,i]))
-
-        print("Evaluation completed for each feature")
-        
-        # Create a dictionary
-        scores = {}
-        scores['GlobalMSE'] = g_mse
-        scores['GlobalSSIM'] = g_ssim
-        scores["LocalMSE"] = l_mse
-        scores["LocalSSIM"] = l_ssim
-        scores["LocalPSNR"] = l_psnr
-
-        return scores
-    
-    def get_compressed_data(self):
-
-        # Initialize list of scores
-        Uscores = []
-
-        for i in range(self.k_):
-            
-            # Get local PCA
-            A = self.A_[i]
-
-            # Get scores
-            U = self.X_[self.labels_==i] @ A
-            Uscores.append(U)
-
-        return Uscores
-    
-    
-
-
-
 
 
     
