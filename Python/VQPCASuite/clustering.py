@@ -379,19 +379,17 @@ class vqpca:
 class vqpls:
 
     # Default constructor
-    def __init__(self, n_components=2, n_clusters=3, ctol=1e-6, Rtol=1e-6, init='kmeans',
+    def __init__(self, ctol=1e-6, Rtol=1e-6,
                   itmax=100, verbose=True, early_stopping=False, patience=10):
-        self.n_components = n_components
-        self.n_clusters = n_clusters
-        self.ctol = ctol
-        self.Rtol = Rtol
-        self.init = init
-        self.itmax = itmax
-        self.verbose = verbose
+        
+        self.ctol = ctol            # Centroids tolerance for convergence
+        self.Rtol = Rtol            # R2 tolerance for convergence
+        self.itmax = itmax          # maximum number of iteration
+        self.verbose = verbose      # Verbosity level
 
         # Monitor for early stopping
-        self.es = early_stopping
-        self.patience = patience
+        self.es = early_stopping    # Early stopping flag
+        self.patience = patience    # Number of iteration for early stopping
 
 
     def initialize_centroids(self, X, init='kmeans', Y=None):
@@ -479,11 +477,16 @@ class vqpls:
 
         return self
     
-    def fit(self, X, Y):
+    def fit(self, X, Y, init='kmeans', n_clusters=2, n_components=3):
         ''' This function performs the VQPLS algorithm, which
         means assigning each point to a cluster and then fitting
         a PLS model to each cluster, such that the sum of the
         squared residuals is minimized.'''
+
+        # Initialize class attributes
+        self.init = init
+        self.n_clusters = n_clusters
+        self.n_components = n_components
 
         # Check shapes of X and Y
         if X.shape[0] != Y.shape[0]:
@@ -598,7 +601,7 @@ class vqpls:
 
         return self
     
-    def fit_from_labels(self, X, Y, labels):
+    def fit_from_labels(self, X, Y, labels, n_components=3):
 
         ''' This function train the local PLS models
         given another set of labels, without performing the
@@ -614,13 +617,15 @@ class vqpls:
 
         # Change number of clusters
         if self.n_clusters != max(labels)+1:
-            raise ValueError("VQPLS is set up with a different number of clusters than the current labels vector")
+            # Update number of clusters
+            self.n_clusters = max(labels)+1
+            raise Warning("VQPLS is set up with a different number of clusters than the current labels vector")
         # Change labels
         self.labels = labels
         # Calculate PLS models
         self.pls = []
         for i in range(self.n_clusters):
-            self.pls.append(PLSRegression(n_components=self.n_components, scale=False, tol=self.Rtol))
+            self.pls.append(PLSRegression(n_components=n_components, scale=False, tol=self.Rtol))
             idps = np.where(self.labels==i)[0]
             self.pls[i].fit(X[idps,:], Y[idps,:])
         # Calculate centroids

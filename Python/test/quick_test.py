@@ -30,6 +30,6 @@ model.fit(k=2, q=0.99)
 # Fit vqpls
 print("========= Checking VQPLS =========")
 model = vqpls()
-model.fit(Xs, Yss)
+model.fit(Xs, Yss, init='random', n_clusters=7, n_components=5)
 
 print("Test done.")
